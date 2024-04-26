@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="faqMapper">
+	<resultMap id="faqResultSet" type="Faq">
+		<result column="FAQ_ID" property="faqId"/>
+		<result column="USER_NO" property="userNo"/>
+		<result column="FAQ_TITLE" property="faqTitle"/>
+		<result column="ANSWER" property="answer"/>
+		<result column="FAQ_CONTENTS" property="faqContents"/>
+		<result column="FAQ_DATE" property="faqDate"/>
+	</resultMap>
+	
+	<resultMap id="attachmentResultSet" type="Attachment">
+		<result column="FILE_NO" property="fileNo"/>
+		<result column="REF_BNO" property="refBno"/>
+		<result column="UPLOAD_DATE" property="uploadDate"/>
+		<result column="FILE_LEVEL" property="fileLevel"/>
+		<result column="FILE_PATH" property="filePath"/>
+		<result column="ORIGIN_NAME" property="originName"/>
+		<result column="GOODS_ID" property="goodsId"/>
+		<result column="CHANGE_NAME" property="changeName"/>
+	</resultMap>
+	
+     <!-- 1:1 게시판 글 등록 -->
+    <insert id="insertFaq">
+    	INSERT INTO FAQ(
+    				FAQ_ID,
+    				USER_NO,
+				    FAQ_TITLE,
+				    FAQ_CONTENTS,
+				    FAQ_DATE
+				)
+				VALUES (
+					SEQ_FAQID.NEXTVAL,
+					#{userNo},
+				    #{faqTitle},
+				    #{faqContents},
+				    SYSDATE
+				)
+    </insert>
+    <!-- 1:1 게시판 사진등록 -->
+	<insert id="insertAttachment">
+	    <!-- INSERT 문 -->
+	    INSERT INTO ATTACHMENT(
+	        FILE_NO,
+	        REF_BNO,
+	        UPLOAD_DATE,
+	        FILE_LEVEL,
+	        FILE_PATH,
+	        ORIGIN_NAME,
+	        CHANGE_NAME
+	    )
+	    VALUES(
+	        SEQ_FILENO.NEXTVAL,
+	        #{refBno},
+	        SYSDATE,
+	        #{fileLevel},
+	        #{filePath},
+	        #{originName},
+	        #{changeName}
+	    )
+	</insert>
+	
+
+	
+	<select id="selectFaqList" resultMap="faqResultSet">
+		SELECT FAQ_ID,
+			   USER_NO,
+			   FAQ_TITLE,
+			   FAQ_CONTENTS,
+			   FAQ_DATE
+		  FROM FAQ
+		  JOIN MEMBER USING (USER_NO)
+		 WHERE USER_NO = #{userNo}
+	</select>
+
+</mapper>

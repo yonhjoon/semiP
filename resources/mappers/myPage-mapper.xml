@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="myPageMapper">
+
+	<resultMap id="memberResultSet" type="Member">
+		<result column="USER_NO" property="userNo"/>
+		<result column="USER_ID" property="userId"/>
+		<result column="NICKNAME" property="nickname"/>
+	</resultMap>
+
+	<resultMap id="productResultSet" type="Product">
+		<result column="GOODS_ID" property="goodsId"/>
+		<result column="SELLER_NO" property="sellerNo"/>
+		<result column="CATEGORY_M" property="categoryM"/>
+		<result column="TITLE" property="title"/>
+		<result column="STATUS" property="status"/>
+		<result column="SELL_PRICE" property="sellPrice"/>
+		<result column="VIEW_COUNT" property="viewCount"/>
+		<result column="P_EXPLAIN" property="pExplain"/>
+		<result column="ENROLL_DATE" property="enrollDate"/>
+		<result column="LOVEIT" property="loveIt" />
+		<result column="RETURN_PD" property="returnPd"/>
+		<result column="LOCATION_T" property="locationT"/>
+		<result column="PRODUCT_STATUS" property="productStatus"/>
+	</resultMap>
+
+	<resultMap id="replyResultSet" type="Reply">
+		<result column="REPLY_NO" property="replyNo"/>
+		<result column="REPLY_CONTENT" property="replyContent"/>
+		<result column="GOODS_ID" property="goodsId"/>
+		<result column="REPLY_WRITER" property="replyWriter"/>
+		<result column="REPLY_DATE" property="replyDate"/>
+		<result column="NICKNAME" property="nickname"/>
+		<result column="SCORE" property="score"/>
+		<collection resultMap="productResultSet" property="product" />
+	</resultMap>
+
+	<resultMap id="nReplyResultSet" type="Nreply">
+		<result column="NREPLY_NO" property="nreplyNo"/>
+		<result column="NREPLY_CONTENT" property="nreplyContent"/>
+		<result column="REPLY_NO" property="replyNo"/>
+		<result column="NREPLY_WRITER" property="nreplyWriter"/>
+		<result column="NREPLY_DATE" property="nreplyDate"/>
+		<collection resultMap="productResultSet" property="product" />
+		<collection resultMap="replyResultSet" property="reply" />
+	</resultMap>
+	
+	<resultMap id="wishListResultSet" type="WishList">
+		<result column="USER_NO" property="userNo"/> 
+		<result column="GOODS_ID" property="goodsId"/>
+		<result column="WISH_DATE" property="wishDate"/>
+		<collection resultMap="memberResultSet" property="member" />
+		<collection resultMap="productResultSet" property="product" />
+	</resultMap>
+	
+	<!-- 로그인 유저의 전체 판매글 개수 -->
+    <select id="selectMyTradeListCount" resultType="_int">
+    	SELECT COUNT(*)
+        FROM PRODUCT
+        WHERE SELLER_NO = #{userNo}
+    </select>
+
+    <!-- 로그인 유저의 전체 판매글 조회 -->
+    <select id="selectMyTradeList" resultMap="productResultSet">
+        SELECT GOODS_ID,
+               SELLER_NO,
+               CATEGORY_M,
+               TITLE,
+               STATUS,
+               SELL_PRICE,
+               VIEW_COUNT,
+               P_EXPLAIN,
+               ENROLL_DATE,
+               LOVEIT,
+               RETURN_PD,
+               LOCATION_T,
+               PRODUCT_STATUS
+        FROM PRODUCT
+        WHERE SELLER_NO = #{userNo}
+        ORDER BY GOODS_ID DESC
+    </select>
+    
+	<!-- 로그인 유저의 판매중인글 개수 -->
+    <select id="selectOnSaleListCount" resultType="_int">
+    	SELECT COUNT(*)
+        FROM PRODUCT
+        WHERE SELLER_NO = #{userNo}
+        AND STATUS = '판매중'
+    </select>
+
+    <!-- 로그인 유저의 판매중인글 조회 -->
+    <select id="selectOnSaleList" resultMap="productResultSet">
+        SELECT GOODS_ID,
+               SELLER_NO,
+               CATEGORY_M,
+               TITLE,
+               STATUS,
+               SELL_PRICE,
+               VIEW_COUNT,
+               P_EXPLAIN,
+               ENROLL_DATE,
+               LOVEIT,
+               RETURN_PD,
+               LOCATION_T,
+               PRODUCT_STATUS
+        FROM PRODUCT
+        WHERE SELLER_NO = #{userNo}
+        AND STATUS = '판매중'
+        ORDER BY GOODS_ID DESC
+        
+    </select>
+
+	<!-- 로그인 유저의 판매완료글 개수 -->
+    <select id="selectSoldOutListCount" resultType="_int">
+    	SELECT COUNT(*)
+        FROM PRODUCT
+        WHERE SELLER_NO = #{userNo}
+        AND NOT STATUS = '판매중'
+    </select>
+
+    <!-- 로그인 유저의 판매완료글 조회 -->
+    <select id="selectSoldOutList" resultMap="productResultSet">
+        SELECT GOODS_ID,
+               SELLER_NO,
+               CATEGORY_M,
+               TITLE,
+               STATUS,
+               SELL_PRICE,
+               VIEW_COUNT,
+               P_EXPLAIN,
+               ENROLL_DATE,
+               LOVEIT,
+               RETURN_PD,
+               LOCATION_T,
+               PRODUCT_STATUS
+        FROM PRODUCT
+        WHERE SELLER_NO = #{userNo}
+        AND NOT STATUS = '판매중'
+        ORDER BY GOODS_ID DESC
+        
+    </select>
+    
+    <!-- 로그인 유저의 전체 댓글 개수 조회 -->
+    <select id="selectMyReplyListCount" resultType="_int">
+        SELECT COUNT(*)
+		FROM (SELECT REPLY_NO, REPLY_CONTENT, REPLY_WRITER, REPLY_DATE, GOODS_ID, TITLE
+		      FROM REPLY
+		      JOIN PRODUCT USING (GOODS_ID)
+		      WHERE REPLY_WRITER = #{userNo}
+		      UNION ALL
+		      SELECT NREPLY_NO, NREPLY_CONTENT, NREPLY_WRITER, NREPLY_DATE, GOODS_ID, TITLE
+		      FROM NREPLY       
+              JOIN REPLY USING(REPLY_NO)
+              JOIN PRODUCT USING(GOODS_ID)
+		      WHERE NREPLY_WRITER = #{userNo})
+    </select>
+    
+    <!-- 로그인 유저의 전체 댓글리스트 조회 -->
+    <select id="selectMyReplyList" resultMap="replyResultSet">
+        SELECT *
+		FROM (SELECT REPLY_NO, REPLY_CONTENT, REPLY_WRITER, REPLY_DATE, GOODS_ID, TITLE
+		      FROM REPLY
+		      JOIN PRODUCT USING (GOODS_ID)
+		      WHERE REPLY_WRITER = #{userNo}
+		      UNION ALL
+		      SELECT NREPLY_NO, NREPLY_CONTENT, NREPLY_WRITER, NREPLY_DATE, GOODS_ID, TITLE
+		      FROM NREPLY       
+              JOIN REPLY USING(REPLY_NO)
+              JOIN PRODUCT USING(GOODS_ID)
+		      WHERE NREPLY_WRITER = #{userNo})
+		ORDER BY REPLY_DATE DESC
+    </select>
+    
+    <!-- 찜한 게시글(Product) 리스트 수 조회 -->
+    <select id="selectLikeProductCount" resultType="_int">
+        SELECT COUNT(*)
+        FROM WISH_LIST
+        WHERE USER_NO = #{userNo}
+    </select>
+
+    <!-- 찜한 게시글(Product) 리스트 조회 -->
+    <select id="selectLikeProduct" resultMap="wishListResultSet">
+        SELECT W.USER_NO,
+			   W.GOODS_ID,
+			   W.WISH_DATE,
+			   M.NICKNAME,
+			   P.TITLE,
+               P.VIEW_COUNT
+        FROM WISH_LIST W
+        JOIN MEMBER M ON (W.USER_NO = M.USER_NO)
+        JOIN PRODUCT P ON (W.GOODS_ID = P.GOODS_ID)
+        WHERE W.USER_NO = #{userNo}
+        ORDER BY W.WISH_DATE DESC
+    </select>
+
+	
+</mapper>
